@@ -7,7 +7,7 @@ this discord bot is actually a webhook and a python bot in one (I coudn't figure
 example messages (by DISCORD_TIMESTAMP, I mean [this](https://discordtimestamp.com/)):
 ```
 :arrow_right: player joined the server at DISCORD_TIMESTAMP
-:arrow_left: player left after playing for 00:01:20, they joined at DISCORD_TIMESTAMP
+:arrow_left: player left after playing for 01:02:03, they joined at DISCORD_TIMESTAMP
 
 
 :x: The server is offline after x minutes, x seconds of uptime! (downtime timestamp: DISCORD_TIMESTAMP)
