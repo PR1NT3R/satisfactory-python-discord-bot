@@ -12,7 +12,8 @@ example messages (by DISCORD_TIMESTAMP, I mean [this](https://discordtimestamp.c
 
 :x: The server is offline after x minutes, x seconds of uptime! (downtime timestamp: DISCORD_TIMESTAMP)
 :white_check_mark: The server is back online after x minutes, x seconds of downtime! (downtime timestamp: DISCORD_TIMESTAMP)
-
+```
+```
 on /info (it's an embed):
 Server status:
 
@@ -28,6 +29,9 @@ Server status:
 and DISCORD_TIMESTAMP
 
 For more info about connected players please use /online
+```
+
+```
 on /online (it's an embed too)
 
 Players on the server:
