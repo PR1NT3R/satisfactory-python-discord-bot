@@ -4,7 +4,7 @@ this code uses [PyFactoryBridge](https://github.com/Jayy001/PyFactoryBridge)
 
 this discord bot is actually a webhook and a python bot in one (I coudn't figure out how to send discord messages to a specific channel unprompted by user from the bot itself, so the webhook solves it), just make sure the actual bot has perms to read and write messages, and make / commands
 
-example messages (by DISCORD_TIMESTAMP, I mean [this](https://discordtimestamp.com/):
+example messages (by DISCORD_TIMESTAMP, I mean [this](https://discordtimestamp.com/)):
 ```
 :arrow_right: player joined the server at DISCORD_TIMESTAMP
 :arrow_left: player left after playing for 00:01:20, they joined at DISCORD_TIMESTAMP
