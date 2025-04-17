@@ -44,6 +44,16 @@ time format for playing for is "HH:MM:SS"
 
 ---
 
+making a discord bot invite (cuz discord broke it)
+
+```
+https://discord.com/oauh2/authorize?client_id=JUSTLEAVEITASITWAS&permissions=8&scope=bot
+----------------------------------------------------------------^
+the start of the stuff you're susposed to add to the url, change 8 to whatever you've choosen in the permissions creator
+```
+
+---
+
 there is a requirements.txt file for python pip, you probably already know what to do with it
 
 as the user in the env file just set your linux username, the script assumes the game server is installed on "/home/{USERNAME}/SatisfactoryDedicatedServer/FactoryServer.sh"
