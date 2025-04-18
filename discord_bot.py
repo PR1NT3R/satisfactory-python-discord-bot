@@ -142,7 +142,6 @@ async def watch_players():
     while not client.is_closed():
         message = ""
         events = get_latest_events()
-        # print(events)
         events2 = []
         if events:
             if "join" in events:
@@ -154,22 +153,24 @@ async def watch_players():
                 for event in events["leave"]:
                     events2.append([event, "leave"])
             events2 = sorted(events2, key=lambda x: x[0][1])
-            # print(events2)
-            # message = None
             current_time = time.time()
             for entry in events2:
                 if entry[1] == "join":
-                    time_difference = current_time-entry[0][1]
+                    time_difference = current_time - entry[0][1]
                     relative_time = f"{int(time_difference // 3600):02}:{int((time_difference % 3600) // 60):02}:{int(time_difference % 60):02}"
                     message += f":arrow_right: {entry[0][0]} joined the server at <t:{entry[0][1]}:R>\n"
                 if entry[1] == "leave":
-                    time_difference = current_time-entry[0][1]
-                    relative_time = f"{int(time_difference // 3600):02}:{int((time_difference % 3600) // 60):02}:{int(time_difference % 60):02}"
-                    message += f":arrow_left: {entry[0][0]} left after playing for {relative_time}, they joined at <t:{entry[0][1]}:R>\n"
+                    leave_time = entry[0][1]
+                    join_time = entry[0][2]
+                    if join_time:
+                        session_length = leave_time - join_time
+                        session_str = f"{int(session_length // 3600):02}:{int((session_length % 3600) // 60):02}:{int(session_length % 60):02}"
+                        message +=  f":arrow_left: {entry[0][0]} left after playing for {session_str}, they joined at <t:{join_time}:R>\n"
+                    else:
+                        message += f":arrow_left: {entry[0][0]} left (join time unknown)\n"
                 message += "\n"
 
-        # print(message)
-        if len(message)>=10:
+        if len(message) >= 10:
             webhook.send(message)
         await asyncio.sleep(10)
 
@@ -252,7 +253,7 @@ async def first_command(interaction):
         .split("/")[-1]
         .split("_")[-2]}
     >Nearest sheduled server reboots: <t:{str(time.mktime(
-        time.strptime(time.strftime('%Y-%m-%d 00:00:00',
+        time.strptime(time.strftime('%Y-%m-%d 01:00:00',
         time.localtime(time.time())), '%Y-%m-%d %H:%M:%S')) +
          (86400 if time.localtime(time.time()).tm_hour > 0 else 0))[:-2]}:R>
      and <t:{str(time.mktime(
