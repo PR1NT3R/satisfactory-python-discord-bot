@@ -232,7 +232,7 @@ async def first_command(interaction):
 
 @tree.command(name="info", description="Shows the session info", guild=discord.Object(id=GUILD_ID))
 async def first_command(interaction):
-    satisfactory = API(address="192.168.0.182:7777", token=SATISFACTORY_TOKEN)
+    satisfactory = API(address=f"{SATISFACTORY_SERVER_IP}:{SATISFACTORY_SERVER_PORT}", token=SATISFACTORY_TOKEN)
     server_health = satisfactory.get_server_health()
     server_game_state = satisfactory.query_server_state()["serverGameState"]
     time_difference = server_game_state["totalGameDuration"]
