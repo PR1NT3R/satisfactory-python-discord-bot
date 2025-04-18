@@ -2,6 +2,11 @@ this code uses [PyFactoryBridge](https://github.com/Jayy001/PyFactoryBridge)
 
 ---
 
+ISSUES:
+ - player checker part of the discord bot stopping working after the server has crashed and restarted (I actually have no idea what is wrong with it)
+
+---
+
 this discord bot is actually a webhook and a python bot in one (I coudn't figure out how to send discord messages to a specific channel unprompted by user from the bot itself, so the webhook solves it), just make sure the actual bot has perms to read and write messages, and make / commands
 
 example messages (by DISCORD_TIMESTAMP, I mean [this](https://discordtimestamp.com/)):
