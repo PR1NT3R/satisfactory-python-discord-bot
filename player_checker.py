@@ -11,73 +11,120 @@ USERNAME = os.getenv('USERNAME')
 LOG_PATH = f"/home/{USERNAME}/SatisfactoryDedicatedServer/server.log"
 JSON_OUTPUT = os.path.join(os.getcwd(), "satisfactory_players.json")
 
-JOIN_PATTERN = re.compile(r"Join succeeded: (.+)")
-ACCEPT_PATTERN = re.compile(r"NotifyAcceptingConnection accepted from: ([\d\.]+):\d+")
-CLOSE_PATTERN = re.compile(r"UNetConnection::Close:.*?RemoteAddr: ([\d\.]+):\d+")
+JOIN_PATTERN = re.compile(r"Login request:.*\?Name=([^\s?]+)")
+REPDATA_PATTERN = re.compile(r"RepData=\[([0-9A-F]+)\]")
+IP_PATTERN = re.compile(r"RemoteAddr: ([\d\.]+):\d+")
+LEAVE_PATTERN = re.compile(r"UNetConnection::Close:.*?UniqueId:.*?RepData=\[([0-9A-F]+)\]")
 
 history = []
-ip_to_username = {}
+repdata_to_username = {}
+ip_to_repdata = {}
 currently_online = {}
 
 def load_existing_data():
-    global history, ip_to_username, currently_online
+    global history, repdata_to_username, ip_to_repdata, currently_online
     if os.path.exists(JSON_OUTPUT):
         with open(JSON_OUTPUT, "r") as f:
             data = json.load(f)
             history = data.get("history", [])
             currently_online = data.get("currently_online", {})
-            ip_to_username = data.get("ip_to_username", {})
+            repdata_to_username = data.get("repdata_to_username", {})
+            ip_to_repdata = data.get("ip_to_repdata", {})
 
 def save_data():
     data = {
         "history": history,
         "currently_online": currently_online,
-        "ip_to_username": ip_to_username
+        "repdata_to_username": repdata_to_username,
+        "ip_to_repdata": ip_to_repdata
     }
     with open(JSON_OUTPUT, "w") as f:
         json.dump(data, f, indent=2)
 
-pending_username = None
-last_accept_time = 0
-
 def parse_line(line):
-    global pending_username, last_accept_time
     timestamp = int(time.time())
 
-    join_match = JOIN_PATTERN.search(line)
-    if join_match:
-        pending_username = join_match.group(1)
-        return
+    if "Login request:" in line:
+        join_match = JOIN_PATTERN.search(line)
+        repdata_match = REPDATA_PATTERN.search(line)
+        
+        if join_match and repdata_match:
+            username = join_match.group(1)
+            repdata = repdata_match.group(1)
+            
+            repdata_to_username[repdata] = username
+            
 
-    accept_match = ACCEPT_PATTERN.search(line)
-    if accept_match and pending_username:
-        ip = accept_match.group(1)
-        if ip not in currently_online:
-            ip_to_username[ip] = pending_username
-            currently_online[ip] = pending_username
-            history.append({
-                "username": pending_username,
-                "ip": ip,
-                "timestamp": timestamp,
-                "type": "JOIN"
-            })
-            print(f"[+] {pending_username} joined (IP: {ip})")
-        pending_username = None
-        return
+            if repdata not in currently_online:
+                currently_online[repdata] = username
+                history.append({
+                    "username": username,
+                    "repdata": repdata,
+                    "timestamp": timestamp,
+                    "type": "JOIN"
+                })
+                print(f"[+] {username} joined (RepData: {repdata[:8]}...)")
+            return
 
-    close_match = CLOSE_PATTERN.search(line)
-    if close_match:
-        ip = close_match.group(1)
-        username = ip_to_username.get(ip)
-        if username and ip in currently_online:
-            currently_online.pop(ip, None)
-            history.append({
-                "username": username,
-                "ip": ip,
-                "timestamp": timestamp,
-                "type": "LEAVE"
-            })
-            print(f"[-] {username} left (IP: {ip})")
+    ip_match = IP_PATTERN.search(line)
+    if ip_match and "Client netspeed is" in line:
+        ip = ip_match.group(1)
+        
+        for event in reversed(history):
+            if event["type"] == "JOIN" and "ip" not in event and "repdata" in event:
+                repdata = event["repdata"]
+                ip_to_repdata[ip] = repdata
+                event["ip"] = ip
+                print(f"    Associated IP {ip} with player {event['username']}")
+                break
+    
+    if "UNetConnection::Close:" in line:
+        leave_match = REPDATA_PATTERN.search(line)
+        ip_match = IP_PATTERN.search(line)
+        
+        if leave_match:
+            repdata = leave_match.group(1)
+            username = repdata_to_username.get(repdata)
+            
+            if username and repdata in currently_online:
+                currently_online.pop(repdata, None)
+                history.append({
+                    "username": username,
+                    "repdata": repdata,
+                    "timestamp": timestamp,
+                    "type": "LEAVE"
+                })
+                print(f"[-] {username} left (RepData: {repdata[:8]}...)")
+                return
+
+        if ip_match:
+            ip = ip_match.group(1)
+
+            repdata = ip_to_repdata.get(ip)
+            if repdata:
+                username = repdata_to_username.get(repdata)
+                if username and repdata in currently_online:
+                    currently_online.pop(repdata, None)
+                    history.append({
+                        "username": username,
+                        "repdata": repdata,
+                        "ip": ip,
+                        "timestamp": timestamp,
+                        "type": "LEAVE"
+                    })
+                    print(f"[-] {username} left (RepData: {repdata[:8]}...)")
+                    return
+
+            if ip in currently_online:
+                username = currently_online[ip]
+                currently_online.pop(ip, None)
+                history.append({
+                    "username": username,
+                    "ip": ip,
+                    "timestamp": timestamp,
+                    "type": "LEAVE"
+                })
+                print(f"[-] {username} left (IP: {ip})")
 
 def tail_log(log_path):
     print(f"Monitoring {log_path}")
