@@ -30,11 +30,18 @@ def get_latest_event(event_type):
             shown_ids.append(i)
             metadata[f"shown_{event_type.lower()}"] = shown_ids
             save_json(META_FILE, metadata)
-            return {
+            
+            result = {
                 "username": event["username"],
-                "ip": event.get("ip"),
                 "timestamp": event["timestamp"]
             }
+
+            if "repdata" in event:
+                result["repdata"] = event["repdata"]
+            if "ip" in event:
+                result["ip"] = event["ip"]
+                
+            return result
 
     return None
 
@@ -54,13 +61,38 @@ def get_latest_events():
     new_joins = []
     new_leaves = []
 
+    last_join = {}
+    for event in history:
+        if event["type"] == "JOIN":
+            key = event.get("repdata") or event.get("ip")
+            if key:
+                last_join[key] = event
+
     for i, event in enumerate(history):
         if i not in shown_ids:
             shown_ids.append(i)
             if event["type"] == "JOIN":
                 new_joins.append([event["username"], event["timestamp"]])
             elif event["type"] == "LEAVE":
-                new_leaves.append([event["username"], event["timestamp"]])
+                key = event.get("repdata") or event.get("ip")
+                join_event = last_join.get(key)
+                join_time = join_event["timestamp"] if join_event else None
+                new_leaves.append([
+                    event["username"],
+                    event["timestamp"],
+                    join_time
+                ])
+
+    metadata["shown_ids"] = shown_ids
+    save_json(META_FILE, metadata)
+
+    result = {}
+    if new_joins:
+        result["join"] = new_joins
+    if new_leaves:
+        result["leave"] = new_leaves
+
+    return result if result else None
 
     metadata["shown_ids"] = shown_ids
     save_json(META_FILE, metadata)
@@ -81,14 +113,15 @@ def get_currently_online():
 
     for entry in reversed(history):
         if entry["type"] == "JOIN":
-            ip = entry.get("ip")
-            if ip in online and ip not in result:
-                result[ip] = {
+            identifier = entry.get("repdata", entry.get("ip"))
+            if identifier and identifier in online and identifier not in result:
+                result[identifier] = {
                     "username": entry["username"],
                     "joined_timestamp": entry["timestamp"]
                 }
 
     return list(result.values())
+
 
 
 # One-time return logic:
