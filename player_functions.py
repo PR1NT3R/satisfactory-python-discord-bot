@@ -11,7 +11,7 @@ def load_json(path):
         with open(path, "r") as f:
             return json.load(f)
     except json.JSONDecodeError:
-        print(f"Warning: JSON decoding failed for {path}, returning empty dict.")
+        # print(f"Warning: JSON decoding failed for {path}, returning empty dict.")
         return {}
 
 def save_json(path, data):
