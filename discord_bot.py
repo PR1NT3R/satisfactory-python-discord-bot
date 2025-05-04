@@ -5,10 +5,12 @@ from typing import Final
 from pyfactorybridge import API
 from player_functions import get_latest_events, get_currently_online # type:ignore
 import pyfactorybridge
+import datetime
 import requests
 import discord # type:ignore
 import asyncio
 import random
+import math
 import json
 import time
 import os
@@ -21,6 +23,7 @@ WEBHOOK_URL: Final[str] = os.getenv('WEBHOOK_URL')
 SATISFACTORY_SERVER_IP: Final[str] = os.getenv('SATISFACTORY_IP')
 SATISFACTORY_SERVER_PORT: Final[str] = os.getenv('SATISFACTORY_PORT')
 IMAGE_URL: Final[str] = os.getenv('IMAGE_URL')
+
 # print(TOKEN)
 
 intents: Intents = Intents.default()
@@ -129,9 +132,11 @@ async def watch_server():
                 formatted_time = ', '.join(time_parts)
 
                 if current_state == "UP":
-                    message = f":white_check_mark: The server is back online after {formatted_time} of downtime! (downtime timestamp: <t:{prev_timestamp}:R>)"
+                    # message = f":white_check_mark: The server is back online after {formatted_time} of downtime! (downtime timestamp: <t:{prev_timestamp}:R>)"
+                    message = f":white_check_mark: The server is back online after {formatted_time} of downtime!\n-# downtime timestamp: <t:{prev_timestamp}:R>)"
                 else:
-                    message = f":x: The server is offline after {formatted_time} of uptime! (downtime timestamp: <t:{prev_timestamp}:R>)"
+                    # message = f":x: The server is offline after {formatted_time} of uptime! (uptime timestamp: <t:{prev_timestamp}:R>)"
+                    message = f":x: The server is offline after {formatted_time} of uptime!\n-# uptime timestamp: <t:{prev_timestamp}:R>)"
 
                 if len(message)>10:
                     webhook.send(message)
@@ -165,7 +170,16 @@ async def watch_players():
                     if join_time:
                         session_length = leave_time - join_time
                         session_str = f"{int(session_length // 3600):02}:{int((session_length % 3600) // 60):02}:{int(session_length % 60):02}"
-                        message +=  f":arrow_left: {entry[0][0]} left after playing for {session_str}, they joined at <t:{join_time}:R>\n"
+                        if "-" in session_str:
+                            #message += f":arrow_left: {entry[0][0]} left, they joined at <t:{join_time}:R>\n-# Coudn't find a valid join timestamp to calculate play time\n"
+
+                            time_played = str(join_time-math.floor(time.time()))
+                            if "-" in time_played:
+                                message += f":arrow_left: {entry[0][0]} left, they joined at <t:{join_time}:R>\n-# Coudn't find a valid join timestamp to calculate play time\n"
+                            else:
+                                message +=  f":arrow_left: {entry[0][0]} left after playing for {time_played}, they joined at <t:{join_time}:R>\n"
+                        else:
+                            message +=  f":arrow_left: {entry[0][0]} left after playing for {session_str}, they joined at <t:{join_time}:R>\n"
                     else:
                         message += f":arrow_left: {entry[0][0]} left (join time unknown)\n"
                 message += "\n"
@@ -239,6 +253,14 @@ async def first_command(interaction):
     time_difference = server_game_state["totalGameDuration"]
     # relative_time = f"{int(time_difference // 3600)} hours, {int((time_difference % 3600) // 60)} minutes and {int(time_difference % 60)} seconds" if time_difference >= 3600 else f"{int(time_difference // 60)} minutes and {int(time_difference % 60)} seconds" if time_difference >= 60 else f"{int(time_difference)} seconds"
     relative_time = f"{int(time_difference // 3600):02}:{int((time_difference % 3600) // 60):02}:{int(time_difference % 60):02}"
+    try:
+        server_milestone = server_game_state["activeSchematic"].split("/")[-1].split("_")[-2]
+    except:
+        server_milestone = "None"
+    try:
+        server_phase = server_game_state["gamePhase"].split("_")[-1].split("'")[0]
+    except:
+        server_phase = "None"
     description = f"""
     >Server Health: {server_health["health"]}
     >Is paused due to no players: {server_game_state["isGamePaused"]}
@@ -246,14 +268,10 @@ async def first_command(interaction):
     >Save name: {server_game_state["activeSessionName"]}
     >Session time: {relative_time} (HH:MM:SS)
     >Connected players: {server_game_state["numConnectedPlayers"]}/{server_game_state["playerLimit"]}
-    >Phase: {server_game_state["gamePhase"]
-        .split("_")[-1]
-        .split("'")[0]}
-    >Milestone: {server_game_state["activeSchematic"]
-        .split("/")[-1]
-        .split("_")[-2]}
+    >Phase: {server_phase}
+    >Milestone: {server_milestone}
     >Nearest sheduled server reboots: <t:{str(time.mktime(
-        time.strptime(time.strftime('%Y-%m-%d 01:00:00',
+        time.strptime(time.strftime('%Y-%m-%d 00:00:00',
         time.localtime(time.time())), '%Y-%m-%d %H:%M:%S')) +
          (86400 if time.localtime(time.time()).tm_hour > 0 else 0))[:-2]}:R>
      and <t:{str(time.mktime(
@@ -280,7 +298,9 @@ async def on_message(message: Message) -> None:
     channel: str = str(message.channel)
     # guild_id: int = int(message.guild.id)
 
-    print(f'[{channel}] {username}: "{user_message}"')
+    timestamp = f"[{datetime.datetime.now().strftime('%Y-%m-%d')} {datetime.datetime.now().strftime('%H:%M:%S')}]"
+
+    print(f'{timestamp} [MESSAGE ] [{channel}] {username}: "{user_message}"')
     # print(f'[{guild_id}-{channel}] {username}: "{user_message}"')
     await send_message(message, user_message)
 
