@@ -5,10 +5,7 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv()
-USERNAME = os.getenv('USERNAME')
-
-LOG_PATH = f"/home/{USERNAME}/SatisfactoryDedicatedServer/server.log"
+LOG_PATH = f"/home/USERNAME/SatisfactoryDedicatedServer/server.log"
 JSON_OUTPUT = os.path.join(os.getcwd(), "satisfactory_players.json")
 
 JOIN_PATTERN = re.compile(r"Login request:.*\?Name=([^\s?]+)")
