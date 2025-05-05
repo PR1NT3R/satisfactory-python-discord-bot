@@ -3,7 +3,14 @@ this code uses [PyFactoryBridge](https://github.com/Jayy001/PyFactoryBridge)
 ---
 
 ISSUES:
- - player checker part of the discord bot stopping working after the server has crashed and restarted (I actually have no idea what is wrong with it)
+ - FIXED - player checker part of the discord bot stopping working after the server has crashed and restarted (I actually have no idea what is wrong with it)
+
+---
+
+---
+
+DEPLOYEMENT:
+ - Replace all hardcoded paths with the actual ones in the player_checker.py and healthcheck.py (I coudn't figure out how to handle paths correctly via env files, it just woudn't work correctly
 
 ---
 
