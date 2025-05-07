@@ -74,12 +74,12 @@ crontab setup:
 
 ```
 # HEALTHCHECK
-@reboot sleep 15; cd /home/pr1nt3r/satisfactory_bot && /home/pr1nt3r/satisfactory_bot_venv_fix/venv/bin/python3 healthcheck.py
-*/5 * * * * cd /home/pr1nt3r/satisfactory_bot && /home/pr1nt3r/satisfactory_bot_venv_fix/venv/bin/python3 healthcheck.py
+@reboot sleep 15; cd /home/USERNAME/satisfactory_bot && /home/USERNAME/satisfactory_bot_venv_fix/venv/bin/python3 healthcheck.py
+*/5 * * * * cd /home/USERNAME/satisfactory_bot && /home/USERNAME/satisfactory_bot_venv_fix/venv/bin/python3 healthcheck.py
 
 #BACKUP SAVES & BLUEPRINTS
 50 7 * * * bash -c 'mkdir -p /home/USERNAME/satisfactory_server_BACKUPS/$(date +\%d-\%m-\%Y)'
-55 7 * * * bash -c 'cp -r /home/USERNAME/.config/Epic/FactoryGame/Saved/SaveGames /home/pr1nt3r/satisfactory_server_BACKUPS/$(date +\%d-\%m-\%Y)/'
+55 7 * * * bash -c 'cp -r /home/USERNAME/.config/Epic/FactoryGame/Saved/SaveGames /home/USERNAME/satisfactory_server_BACKUPS/$(date +\%d-\%m-\%Y)/'
 ```
 
 logs rotating:
